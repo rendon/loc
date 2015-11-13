@@ -7,7 +7,10 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"regexp"
 	"strings"
+
+	"github.com/goutil/ds"
 )
 
 type City struct {
@@ -15,76 +18,9 @@ type City struct {
 	Country string
 }
 
-type Node struct {
-	Char  byte
-	Next  map[byte]*Node
-	Value City
-}
-
-var (
-	root *Node
-)
-
-func insert(node *Node, city, country string, p int) bool {
-	if node == nil {
-		return false
-	}
-	if p == len(city) {
-		node.Value = City{city, country}
-		return false
-	}
-	newWord := false
-	char := city[p]
-	if node.Next[char] == nil {
-		node.Next[char] = &Node{
-			Char: char,
-			Next: make(map[byte]*Node),
-		}
-		newWord = true
-	}
-	newWord = insert(node.Next[char], city, country, p+1) || newWord
-	return newWord
-}
-
-func addCity(city, country string) bool {
-	return insert(root, city, country, 0)
-}
-
-func tour(node *Node, word string) {
-	count := 0
-	for k, v := range node.Next {
-		count += 1
-		w := word + string(k)
-		tour(v, w)
-	}
-	if count == 0 {
-		fmt.Printf("> %v: %v\n", word, node.Value)
-	}
-}
-
-func find(node *Node, city string, p int) *City {
-	if node == nil {
-		return nil
-	}
-	if p == len(city) {
-		if node.Value.Name == city {
-			return &node.Value
-		}
-		return nil
-	}
-	char := city[p]
-	if node.Next[char] == nil {
-		return nil
-	}
-	return find(node.Next[char], city, p+1)
-}
-
-func findCity(city string) *City {
-	return find(root, city, 0)
-}
-
 func main() {
-	root = &Node{Next: make(map[byte]*Node)}
+	countries := make(map[string]bool)
+	trie := ds.NewTrie()
 	buf, err := ioutil.ReadFile("GeoLite2Cities/GeoLite2-City-Locations-en.csv")
 	if err != nil {
 		log.Fatal(err)
@@ -103,14 +39,13 @@ func main() {
 			first = false
 			continue
 		}
-		var c = City{
-			Name:    strings.ToLower(record[10]),
-			Country: strings.ToLower(record[5]),
-		}
-		if c.Name == "" || c.Country == "" {
+		city := strings.ToLower(record[10])
+		country := strings.ToLower(record[5])
+		if city == "" || country == "" {
 			continue
 		}
-		if addCity(c.Name, c.Country) {
+		countries[country] = true
+		if trie.Insert(city, City{city, country}) {
 			//fmt.Printf("New city added: %s\n", c.Name)
 		}
 	}
@@ -120,11 +55,25 @@ func main() {
 		log.Fatal(err)
 	}
 	var locations = strings.Split(string(buf), "\n")
+	re := regexp.MustCompile("\\s*,\\s*")
 	for _, loc := range locations {
+		tokens := re.Split(loc, -1)
+		if len(tokens) == 2 {
+			country := strings.Trim(tokens[1], " .,")
+			if countries[country] {
+				fmt.Printf("1> %s: %s\n", loc, country)
+				continue
+			}
+			if v := trie.Find(tokens[0]); v != nil {
+				fmt.Printf("2> %s: %v\n", loc, v)
+				continue
+			}
+		}
+
 		loc := strings.ToLower(loc)
-		v := findCity(loc)
-		if v != nil {
-			fmt.Printf("%s: %s\n", loc, *v)
+		if v := trie.Find(loc); v != nil {
+			fmt.Printf("3> %s: %v\n", loc, v)
+			continue
 		}
 	}
 }
