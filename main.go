@@ -19,6 +19,13 @@ type City struct {
 	Country string
 }
 
+var (
+	splitRe   = regexp.MustCompile("\\s*[,|-/]\\s*")
+	punctRe   = regexp.MustCompile("[,.;:]")
+	accentRe  = regexp.MustCompile("[áéíóú`]")
+	specialRe = regexp.MustCompile(`[♥✈️]'"`)
+)
+
 func main() {
 	if len(os.Args) < 2 {
 		log.Fatalf("USAGE: %s <locations_file>", os.Args[0])
@@ -29,7 +36,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	re := regexp.MustCompile("\\s*,\\s*")
 	countryCodes := make(map[string]string)
 	lines := strings.Split(string(buf), "\n")
 	for _, line := range lines {
@@ -38,7 +44,6 @@ func main() {
 			continue
 		}
 		countryCodes[tokens[0]] = tokens[1]
-		//log.Printf("%s -> %s\n", tokens[0], tokens[1])
 	}
 
 	countries := make(map[string]bool)
@@ -66,6 +71,11 @@ func main() {
 		if city == "" || country == "" {
 			continue
 		}
+		city = punctRe.ReplaceAllString(city, "")
+		city = accentRe.ReplaceAllString(city, "")
+		country = punctRe.ReplaceAllString(country, "")
+		country = accentRe.ReplaceAllString(country, "")
+
 		countries[country] = true
 		if trie.Insert(city, City{city, country}) {
 			//fmt.Printf("New city added: %s\n", c.Name)
@@ -78,35 +88,51 @@ func main() {
 	locations := strings.Split(string(buf), "\n")
 	for _, loc := range locations {
 		loc := strings.ToLower(loc)
-		tokens := re.Split(loc, -1)
+		loc = accentRe.ReplaceAllString(loc, "")
+		tokens := splitRe.Split(loc, -1)
+		for i := 0; i < len(tokens); i++ {
+			tokens[i] = punctRe.ReplaceAllString(tokens[i], "")
+			tokens[i] = accentRe.ReplaceAllString(tokens[i], "")
+			tokens[i] = specialRe.ReplaceAllString(tokens[i], "")
+		}
+
+		// Case 1: city, [country]
 		if len(tokens) == 2 {
 			country := strings.Trim(tokens[1], " .,")
-			// Case 1: city, [country]
 			if countries[country] {
-				fmt.Printf("1> %s: %s\n", loc, country)
+				fmt.Printf("1: %s -> %s\n", loc, country)
 				continue
 			}
 		}
-		// Case 2: Exact match
-		if v := trie.Find(loc); v != nil {
-			fmt.Printf("2> %s: %v\n", loc, v)
+
+		// Case 2: [country]
+		if countries[loc] {
+			fmt.Printf("2: %s -> %s\n", loc, loc)
 			continue
 		}
 
-		// Case 3: [city], country
+		// Case 3: Exact match
+		if v := trie.Find(loc); v != nil {
+			fmt.Printf("3: %s -> %v\n", loc, v)
+			continue
+		}
+
+		// Case 4: [city], country
 		if len(tokens) > 0 {
 			if v := trie.Find(tokens[0]); v != nil {
-				fmt.Printf("3> %s: %v\n", loc, v)
+				fmt.Printf("4: %s -> %v\n", loc, v)
 				continue
 			}
 		}
 
-		// Case 4: by country code
+		// Case 5: by country code
 		if len(tokens) == 2 {
 			if countryCodes[tokens[1]] != "" {
-				fmt.Printf("4> %s: %v\n", loc, countryCodes[tokens[1]])
+				fmt.Printf("5: %s -> %v\n", loc, countryCodes[tokens[1]])
+				continue
 			}
 		}
+		log.Printf(":( %q", loc)
 
 		// Case 5: by city code
 

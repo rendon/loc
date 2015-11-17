@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+bin/build && bin/loc ~/locations.txt > output.txt 2> log.txt
