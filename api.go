@@ -20,7 +20,7 @@ type Location struct {
 }
 
 var (
-	splitRe   = regexp.MustCompile(`\\s*[,|\-/]\\s*`)
+	splitRe   = regexp.MustCompile(`\s*[,|/-]\s*`)
 	punctRe   = regexp.MustCompile("[,.;:]")
 	accentRe  = regexp.MustCompile("[áéíóú`]")
 	specialRe = regexp.MustCompile(`[♥✈️]'"`)
@@ -29,11 +29,13 @@ var (
 	countryTrie   = ds.NewTrie()
 	cityTrie      = ds.NewTrie()
 
-	countryCodes = make(map[string]string)
+	countryCodes = make(map[string]*Location)
 )
 
 func init() {
 	log = logger.New(os.Stderr, "", 0)
+
+	// Read world cities
 	db, err := sql.Open("sqlite3", "data/ccc.db")
 	if err != nil {
 		log.Fatal(err)
@@ -66,29 +68,69 @@ WHERE   continents.id = countries.continent_id AND
 		continentTrie.Insert(l.Continent, &l)
 		countryTrie.Insert(l.Country, &l)
 		cityTrie.Insert(l.City, &l)
+		countryCodes[l.ShortCountryCode] = &l
 	}
 	log.Printf("Finishing init.")
 }
 
 func normalizeLocation(loc string) *Location {
 	loc = strings.ToLower(loc)
-	loc = strings.Replace(loc, "à", "a", -1)
-	loc = strings.Replace(loc, "è", "e", -1)
-	loc = strings.Replace(loc, "ì", "i", -1)
-	loc = strings.Replace(loc, "ò", "o", -1)
-	loc = strings.Replace(loc, "ù", "u", -1)
+	loc = strings.Trim(loc, " ")
+	loc = strings.Replace(loc, "á", "a", -1)
+	loc = strings.Replace(loc, "é", "e", -1)
+	loc = strings.Replace(loc, "í", "i", -1)
+	loc = strings.Replace(loc, "ó", "o", -1)
+	loc = strings.Replace(loc, "ú", "u", -1)
+	tokens := splitRe.Split(loc, -1)
+	for i := 0; i < len(tokens); i++ {
+		tokens[i] = punctRe.ReplaceAllString(tokens[i], "")
+		tokens[i] = specialRe.ReplaceAllString(tokens[i], "")
+		tokens[i] = strings.Replace(tokens[i], "á", "a", -1)
+		tokens[i] = strings.Replace(tokens[i], "é", "e", -1)
+		tokens[i] = strings.Replace(tokens[i], "í", "i", -1)
+		tokens[i] = strings.Replace(tokens[i], "ó", "o", -1)
+		tokens[i] = strings.Replace(tokens[i], "ó", "u", -1)
+	}
 
-	l, ok := continentTrie.Find(loc).(*Location)
+	// Case 1: ciy, country OR country, city
+	if len(tokens) == 2 {
+		if tokens[0] == "veracruz" {
+			log.Printf(">> %s", loc)
+		}
+		if l, ok := countryTrie.Find(tokens[1]).(*Location); ok && l != nil {
+			return l
+		}
+		if l, ok := countryTrie.Find(tokens[0]).(*Location); ok && l != nil {
+			return l
+		}
+		if l, ok := cityTrie.Find(tokens[0]).(*Location); ok && l != nil {
+			return l
+		}
+		if l, ok := cityTrie.Find(tokens[1]).(*Location); ok && l != nil {
+			return l
+		}
+	}
+
+	// Case 2a: Exact match with country
+	l, ok := countryTrie.Find(loc).(*Location)
 	if ok && l != nil {
 		return l
 	}
 
-	l, ok = countryTrie.Find(loc).(*Location)
+	// Case 2b: Exact match with city
+	l, ok = cityTrie.Find(loc).(*Location)
 	if ok && l != nil {
 		return l
 	}
 
-	l, ok = countryTrie.Find(loc).(*Location)
+	// Case 3: By country code
+	if len(tokens) == 2 {
+		if countryCodes[tokens[1]] != nil {
+			return countryCodes[tokens[1]]
+		}
+	}
+
+	l, ok = continentTrie.Find(loc).(*Location)
 	if ok && l != nil {
 		return l
 	}

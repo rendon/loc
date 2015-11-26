@@ -48,9 +48,14 @@ func loc(c *cli.Context) {
 
 	for i := 0; i < len(users); i++ {
 		u := &users[i]
+		if u.RawLocation == "" {
+			continue
+		}
 		l := normalizeLocation(u.RawLocation)
 		if l != nil {
-			fmt.Printf("%s:%v\n", u.ID, l)
+			fmt.Printf("%s:%q:%v\n", u.ID, u.RawLocation, l)
+		} else {
+			fmt.Printf("&{%q, %q}\n", u.ID, u.RawLocation)
 		}
 	}
 }
