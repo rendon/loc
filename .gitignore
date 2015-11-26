@@ -2,3 +2,4 @@
 GeoLite2Cities/
 _vendor/
 bin/loc
+loc
