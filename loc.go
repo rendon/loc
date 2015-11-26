@@ -5,24 +5,24 @@ import (
 	logger "log"
 	"os"
 
+	"bitbucket.org/criticalmasser/goapis/results"
 	"github.com/codegangsta/cli"
 	"gopkg.in/mgo.v2"
 )
+
+type User struct {
+	ID                 string
+	RawLocation        string
+	NormalizedLocation string
+}
 
 var (
 	log *logger.Logger
 )
 
-func init() {
-	log = logger.New(os.Stderr, "", 0)
-}
-
 func loc(c *cli.Context) {
 	if len(c.Args()) != 1 {
 		log.Fatal("USAGE: ./main <dbname>")
-	}
-	if c.Bool("strict") {
-		fmt.Printf("Strict mode!\n")
 	}
 	dbname := c.Args()[0]
 	session, err := mgo.Dial("mongodb-server")
@@ -30,13 +30,29 @@ func loc(c *cli.Context) {
 		log.Fatal(err)
 	}
 
-	db := session.DB(dbname)
-	names, err := db.CollectionNames()
-	if err != nil {
-		log.Fatal(err)
+	col := session.DB(dbname).C("graph")
+	nodes := col.Find(nil).Iter()
+	var r results.Node
+	users := make([]User, 0)
+	for nodes.Next(&r) {
+		loc, ok := r.Properties["location"].(string)
+		if !ok {
+			continue
+		}
+		u := User{
+			ID:          r.Start,
+			RawLocation: loc,
+		}
+		users = append(users, u)
 	}
-	fmt.Printf("DB name: %s\n", dbname)
-	fmt.Printf("%v\n", names)
+
+	for i := 0; i < len(users); i++ {
+		u := &users[i]
+		l := normalizeLocation(u.RawLocation)
+		if l != nil {
+			fmt.Printf("%s:%v\n", u.ID, l)
+		}
+	}
 }
 
 func main() {
@@ -46,11 +62,5 @@ func main() {
 	app.Usage = "Normalize user locations"
 	app.ArgsUsage = "<dbname>"
 	app.Action = loc
-	app.Flags = []cli.Flag{
-		cli.BoolFlag{
-			Name:  "strict",
-			Usage: "Only work with explored users",
-		},
-	}
 	app.Run(os.Args)
 }

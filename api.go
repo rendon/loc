@@ -1,141 +1,96 @@
 package main
 
 import (
-	"bytes"
-	"encoding/csv"
-	"fmt"
-	"io"
-	"io/ioutil"
-	"log"
+	"database/sql"
+	logger "log"
 	"os"
 	"regexp"
 	"strings"
 
 	"github.com/goutil/ds"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-type City struct {
-	Name    string
-	Country string
+type Location struct {
+	Continent        string
+	Country          string
+	ShortCountryCode string
+	LongCountryCode  string
+	City             string
 }
 
 var (
-	splitRe   = regexp.MustCompile("\\s*[,|-/]\\s*")
+	splitRe   = regexp.MustCompile(`\\s*[,|\-/]\\s*`)
 	punctRe   = regexp.MustCompile("[,.;:]")
 	accentRe  = regexp.MustCompile("[áéíóú`]")
 	specialRe = regexp.MustCompile(`[♥✈️]'"`)
+
+	continentTrie = ds.NewTrie()
+	countryTrie   = ds.NewTrie()
+	cityTrie      = ds.NewTrie()
+
+	countryCodes = make(map[string]string)
 )
 
-func main() {
-	if len(os.Args) < 2 {
-		log.Fatalf("USAGE: %s <locations_file>", os.Args[0])
-	}
-	locFile := os.Args[1]
-
-	buf, err := ioutil.ReadFile("data/country_codes.txt")
+func init() {
+	log = logger.New(os.Stderr, "", 0)
+	db, err := sql.Open("sqlite3", "data/ccc.db")
 	if err != nil {
 		log.Fatal(err)
 	}
-	countryCodes := make(map[string]string)
-	lines := strings.Split(string(buf), "\n")
-	for _, line := range lines {
-		tokens := strings.Split(line, " ")
-		if len(tokens) != 2 {
-			continue
-		}
-		countryCodes[tokens[0]] = tokens[1]
-	}
-
-	countries := make(map[string]bool)
-	trie := ds.NewTrie()
-	buf, err = ioutil.ReadFile("data/GeoLite2-City-Locations-en.csv")
+	query := `
+SELECT  continents.name AS continent, countries.name AS country, 
+        countries.short_code AS short, countries.long_code AS long,
+        cities.name AS city
+FROM    continents, countries, cities
+WHERE   continents.id = countries.continent_id AND
+        cities.country_id = countries.id;
+	`
+	rows, err := db.Query(query)
 	if err != nil {
 		log.Fatal(err)
 	}
-	r := csv.NewReader(bytes.NewReader(buf))
-	first := true
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
-		}
+
+	for rows.Next() {
+		var l Location
+		err = rows.Scan(&l.Continent, &l.Country, &l.ShortCountryCode,
+			&l.LongCountryCode, &l.City)
 		if err != nil {
-			log.Fatal(err)
-		}
-		if first {
-			first = false
+			log.Println(err)
 			continue
 		}
-		city := strings.ToLower(record[10])
-		country := strings.ToLower(record[5])
-		if city == "" || country == "" {
-			continue
-		}
-		city = punctRe.ReplaceAllString(city, "")
-		city = accentRe.ReplaceAllString(city, "")
-		country = punctRe.ReplaceAllString(country, "")
-		country = accentRe.ReplaceAllString(country, "")
+		l.Continent = strings.ToLower(l.Continent)
+		l.Country = strings.ToLower(l.Country)
+		l.City = strings.ToLower(l.City)
 
-		countries[country] = true
-		if trie.Insert(city, City{city, country}) {
-			//fmt.Printf("New city added: %s\n", c.Name)
-		}
+		continentTrie.Insert(l.Continent, &l)
+		countryTrie.Insert(l.Country, &l)
+		cityTrie.Insert(l.City, &l)
 	}
-	buf, err = ioutil.ReadFile(locFile)
-	if err != nil {
-		log.Fatal(err)
+	log.Printf("Finishing init.")
+}
+
+func normalizeLocation(loc string) *Location {
+	loc = strings.ToLower(loc)
+	loc = strings.Replace(loc, "à", "a", -1)
+	loc = strings.Replace(loc, "è", "e", -1)
+	loc = strings.Replace(loc, "ì", "i", -1)
+	loc = strings.Replace(loc, "ò", "o", -1)
+	loc = strings.Replace(loc, "ù", "u", -1)
+
+	l, ok := continentTrie.Find(loc).(*Location)
+	if ok && l != nil {
+		return l
 	}
-	locations := strings.Split(string(buf), "\n")
-	for _, loc := range locations {
-		loc := strings.ToLower(loc)
-		loc = accentRe.ReplaceAllString(loc, "")
-		tokens := splitRe.Split(loc, -1)
-		for i := 0; i < len(tokens); i++ {
-			tokens[i] = punctRe.ReplaceAllString(tokens[i], "")
-			tokens[i] = accentRe.ReplaceAllString(tokens[i], "")
-			tokens[i] = specialRe.ReplaceAllString(tokens[i], "")
-		}
 
-		// Case 1: city, [country]
-		if len(tokens) == 2 {
-			country := strings.Trim(tokens[1], " .,")
-			if countries[country] {
-				fmt.Printf("1: %s -> %s\n", loc, country)
-				continue
-			}
-		}
-
-		// Case 2: [country]
-		if countries[loc] {
-			fmt.Printf("2: %s -> %s\n", loc, loc)
-			continue
-		}
-
-		// Case 3: Exact match
-		if v := trie.Find(loc); v != nil {
-			fmt.Printf("3: %s -> %v\n", loc, v)
-			continue
-		}
-
-		// Case 4: [city], country
-		if len(tokens) > 0 {
-			if v := trie.Find(tokens[0]); v != nil {
-				fmt.Printf("4: %s -> %v\n", loc, v)
-				continue
-			}
-		}
-
-		// Case 5: by country code
-		if len(tokens) == 2 {
-			if countryCodes[tokens[1]] != "" {
-				fmt.Printf("5: %s -> %v\n", loc, countryCodes[tokens[1]])
-				continue
-			}
-		}
-		log.Printf(":( %q", loc)
-
-		// Case 5: by city code
-
-		// Case 6: approximate string matching
+	l, ok = countryTrie.Find(loc).(*Location)
+	if ok && l != nil {
+		return l
 	}
+
+	l, ok = countryTrie.Find(loc).(*Location)
+	if ok && l != nil {
+		return l
+	}
+	return nil
 }

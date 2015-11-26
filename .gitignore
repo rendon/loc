@@ -3,3 +3,4 @@ GeoLite2Cities/
 _vendor/
 bin/loc
 loc
+data/ccc.db
