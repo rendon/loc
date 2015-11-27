@@ -28,6 +28,7 @@ var (
 	continentTrie = ds.NewTrie()
 	countryTrie   = ds.NewTrie()
 	cityTrie      = ds.NewTrie()
+	mexicanCities = ds.NewTrie()
 
 	countryCodes = make(map[string]*Location)
 )
@@ -69,6 +70,9 @@ WHERE   continents.id = countries.continent_id AND
 		countryTrie.Insert(l.Country, &l)
 		cityTrie.Insert(l.City, &l)
 		countryCodes[l.ShortCountryCode] = &l
+		if l.ShortCountryCode == "MX" {
+			mexicanCities.Insert(l.City, &l)
+		}
 	}
 }
 
@@ -89,6 +93,17 @@ func normalizeLocation(loc string) *Location {
 		tokens[i] = strings.Replace(tokens[i], "í", "i", -1)
 		tokens[i] = strings.Replace(tokens[i], "ó", "o", -1)
 		tokens[i] = strings.Replace(tokens[i], "ó", "u", -1)
+	}
+
+	// Very special case for México
+	if l, ok := mexicanCities.Find(loc).(*Location); ok && l != nil {
+		return l
+	}
+
+	for i := 0; i < len(tokens); i++ {
+		if l, ok := mexicanCities.Find(tokens[i]).(*Location); ok && l != nil {
+			return l
+		}
 	}
 
 	// Case 1: ciy, country OR country, city
