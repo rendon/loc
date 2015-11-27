@@ -70,7 +70,6 @@ WHERE   continents.id = countries.continent_id AND
 		cityTrie.Insert(l.City, &l)
 		countryCodes[l.ShortCountryCode] = &l
 	}
-	log.Printf("Finishing init.")
 }
 
 func normalizeLocation(loc string) *Location {
@@ -94,9 +93,6 @@ func normalizeLocation(loc string) *Location {
 
 	// Case 1: ciy, country OR country, city
 	if len(tokens) == 2 {
-		if tokens[0] == "veracruz" {
-			log.Printf(">> %s", loc)
-		}
 		if l, ok := countryTrie.Find(tokens[1]).(*Location); ok && l != nil {
 			return l
 		}
@@ -130,9 +126,21 @@ func normalizeLocation(loc string) *Location {
 		}
 	}
 
-	l, ok = continentTrie.Find(loc).(*Location)
-	if ok && l != nil {
-		return l
+	// Case 4: Try all tokens by country, city and continent
+	for _, t := range tokens {
+		if l, ok = countryTrie.Find(t).(*Location); ok && l != nil {
+			return l
+		}
+	}
+	for _, t := range tokens {
+		if l, ok = cityTrie.Find(t).(*Location); ok && l != nil {
+			return l
+		}
+	}
+	for _, t := range tokens {
+		if l, ok = continentTrie.Find(t).(*Location); ok && l != nil {
+			return l
+		}
 	}
 	return nil
 }
