@@ -76,23 +76,24 @@ WHERE   continents.id = countries.continent_id AND
 	}
 }
 
+func cleanString(str string) string {
+	str = strings.ToLower(str)
+	str = strings.Trim(str, " ")
+	str = strings.Replace(str, "á", "a", -1)
+	str = strings.Replace(str, "é", "e", -1)
+	str = strings.Replace(str, "í", "i", -1)
+	str = strings.Replace(str, "ó", "o", -1)
+	str = strings.Replace(str, "ú", "u", -1)
+	str = punctRe.ReplaceAllString(str, "")
+	str = specialRe.ReplaceAllString(str, "")
+	return str
+}
+
 func normalizeLocation(loc string) *Location {
-	loc = strings.ToLower(loc)
-	loc = strings.Trim(loc, " ")
-	loc = strings.Replace(loc, "á", "a", -1)
-	loc = strings.Replace(loc, "é", "e", -1)
-	loc = strings.Replace(loc, "í", "i", -1)
-	loc = strings.Replace(loc, "ó", "o", -1)
-	loc = strings.Replace(loc, "ú", "u", -1)
+	loc = cleanString(loc)
 	tokens := splitRe.Split(loc, -1)
 	for i := 0; i < len(tokens); i++ {
-		tokens[i] = punctRe.ReplaceAllString(tokens[i], "")
-		tokens[i] = specialRe.ReplaceAllString(tokens[i], "")
-		tokens[i] = strings.Replace(tokens[i], "á", "a", -1)
-		tokens[i] = strings.Replace(tokens[i], "é", "e", -1)
-		tokens[i] = strings.Replace(tokens[i], "í", "i", -1)
-		tokens[i] = strings.Replace(tokens[i], "ó", "o", -1)
-		tokens[i] = strings.Replace(tokens[i], "ó", "u", -1)
+		tokens[i] = cleanString(tokens[i])
 	}
 
 	// Very special case for México
