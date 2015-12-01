@@ -35,7 +35,9 @@ var (
 
 func init() {
 	log = logger.New(os.Stderr, "", 0)
+}
 
+func initialize() {
 	// Read world cities
 	db, err := sql.Open("sqlite3", "data/ccc.db")
 	if err != nil {
@@ -95,17 +97,6 @@ func normalizeLocation(loc string) *Location {
 		tokens[i] = strings.Replace(tokens[i], "ó", "u", -1)
 	}
 
-	// Very special case for México
-	if l, ok := mexicanCities.Find(loc).(*Location); ok && l != nil {
-		return l
-	}
-
-	for i := 0; i < len(tokens); i++ {
-		if l, ok := mexicanCities.Find(tokens[i]).(*Location); ok && l != nil {
-			return l
-		}
-	}
-
 	// Case 1: ciy, country OR country, city
 	if len(tokens) == 2 {
 		if l, ok := countryTrie.Find(tokens[1]).(*Location); ok && l != nil {
@@ -114,6 +105,18 @@ func normalizeLocation(loc string) *Location {
 		if l, ok := countryTrie.Find(tokens[0]).(*Location); ok && l != nil {
 			return l
 		}
+
+		// Very special case for México
+		if l, ok := mexicanCities.Find(loc).(*Location); ok && l != nil {
+			return l
+		}
+
+		for i := 0; i < len(tokens); i++ {
+			if l, ok := mexicanCities.Find(tokens[i]).(*Location); ok && l != nil {
+				return l
+			}
+		}
+
 		if l, ok := cityTrie.Find(tokens[0]).(*Location); ok && l != nil {
 			return l
 		}

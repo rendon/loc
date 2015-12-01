@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+mkdir -p $HOME/bin
+bin/build || exit 1
+cp -v bin/loc $HOME/bin

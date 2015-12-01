@@ -4,3 +4,4 @@ _vendor/
 bin/loc
 loc
 data/ccc.db
+output.txt

@@ -61,6 +61,10 @@ func loc(c *cli.Context) {
 	if len(c.Args()) != 1 {
 		log.Fatal("USAGE: ./main <dbname>")
 	}
+	log.Printf("Initializing database...")
+	initialize()
+
+	log.Printf("Getting locations from server...")
 	dbname := c.Args()[0]
 	session, err := mgo.Dial("mongodb-server")
 	if err != nil {
@@ -84,6 +88,7 @@ func loc(c *cli.Context) {
 	}
 
 	var f = make(map[string]int)
+	mx := make([]User, 0)
 	for i := 0; i < len(users); i++ {
 		u := &users[i]
 		if u.RawLocation == "" {
@@ -93,6 +98,9 @@ func loc(c *cli.Context) {
 		if l != nil {
 			//fmt.Printf("%s:%q:%v\n", u.ID, u.RawLocation, l)
 			f[l.LongCountryCode]++
+			if l.ShortCountryCode == "MX" {
+				mx = append(mx, *u)
+			}
 		} else {
 			//fmt.Printf("&{%q, %q}\n", u.ID, u.RawLocation)
 		}
@@ -115,6 +123,10 @@ func loc(c *cli.Context) {
 	fmt.Println()
 	for _, item := range freq.Items {
 		fmt.Printf("%q: %d,\n", item.Code, item.Quantity)
+	}
+
+	for i := 0; i < len(mx); i++ {
+		fmt.Printf("%s ", mx[i].ID)
 	}
 }
 
