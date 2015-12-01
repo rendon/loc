@@ -86,6 +86,7 @@ func loc(c *cli.Context) {
 		}
 		users = append(users, u)
 	}
+	log.Printf("users: %d\n", len(users))
 
 	var f = make(map[string]int)
 	mx := make([]User, 0)
@@ -96,7 +97,9 @@ func loc(c *cli.Context) {
 		}
 		l := normalizeLocation(u.RawLocation)
 		if l != nil {
-			//fmt.Printf("%s:%q:%v\n", u.ID, u.RawLocation, l)
+			//if l.Address != "" {
+			//    fmt.Printf("%s:%q:%v\n", u.ID, u.RawLocation, l)
+			//}
 			f[l.LongCountryCode]++
 			if l.ShortCountryCode == "MX" {
 				mx = append(mx, *u)

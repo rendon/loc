@@ -2,12 +2,16 @@ package main
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	logger "log"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/goutil/ds"
+	"github.com/kellydunn/golang-geo"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -17,6 +21,7 @@ type Location struct {
 	ShortCountryCode string
 	LongCountryCode  string
 	City             string
+	Address          string
 }
 
 var (
@@ -31,10 +36,35 @@ var (
 	mexicanCities = ds.NewTrie()
 
 	countryCodes = make(map[string]*Location)
+
+	// Simple floating point regex
+	r  = `[-+]?[0-9]+(\.[0-9]*)?`
+	re = regexp.MustCompile(fmt.Sprintf(`%s\s*,\s*%s`, r, r))
+
+	geocoder = geo.GoogleGeocoder{}
 )
 
 func init() {
 	log = logger.New(os.Stderr, "", 0)
+	// You'll need a Google API key.
+	geo.SetGoogleAPIKey(os.Getenv("GOOGLE_GEO_API_KEY"))
+}
+
+func parseCoordinate(c string) (*geo.Point, error) {
+	c = strings.Replace(c, " ", "", -1)
+	points := strings.Split(c, ",")
+	if len(points) != 2 {
+		return nil, errors.New("Invalid coordinates")
+	}
+	lat, err := strconv.ParseFloat(points[0], 64)
+	if err != nil {
+		return nil, err
+	}
+	long, err := strconv.ParseFloat(points[1], 64)
+	if err != nil {
+		return nil, err
+	}
+	return geo.NewPoint(lat, long), nil
 }
 
 func initialize() {
@@ -92,6 +122,32 @@ func cleanString(str string) string {
 }
 
 func normalizeLocation(loc string) *Location {
+	if match := re.FindString(loc); match != "" {
+		p, err := parseCoordinate(match)
+		if err != nil {
+			log.Println(err)
+			return nil
+		}
+
+		addr, err := geocoder.ReverseGeocode(p)
+		if err != nil {
+			log.Println(err)
+			return nil
+		}
+
+		tokens := strings.Split(addr, ",")
+		country := strings.ToLower(tokens[len(tokens)-1])
+		if l, ok := countryTrie.Find(country).(*Location); ok && l != nil {
+			l.Address = addr
+			return l
+		}
+
+		if l := countryCodes[country]; l != nil {
+			l.Address = addr
+			return l
+		}
+	}
+
 	loc = cleanString(loc)
 	tokens := splitRe.Split(loc, -1)
 	for i := 0; i < len(tokens); i++ {
