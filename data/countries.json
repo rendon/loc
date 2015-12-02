@@ -3422,7 +3422,9 @@
         "cities": [
             "Mexico City",
             "Guadalajara",
-            "Monterrey",
+            "Monterrey"
+        ],
+        "city_abbreviations": [
             "acapulco",
             "acayucan",
             "acuna",

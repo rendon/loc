@@ -26,11 +26,12 @@ type Location struct {
 }
 
 type Country struct {
-	Name      string   `json:"name"`
-	Names     []string `json:"names"`
-	Cities    []string `json:"cities"`
-	ShortCode string   `json:"short_code"`
-	LongCode  string   `json:"long_code"`
+	Name              string   `json:"name"`
+	Names             []string `json:"names"`
+	Cities            []string `json:"cities"`
+	CityAbbreviations []string `json:"city_abbreviations"`
+	ShortCode         string   `json:"short_code"`
+	LongCode          string   `json:"long_code"`
 }
 
 var (
@@ -98,6 +99,9 @@ func initialize() {
 			countryTrie.Insert(strings.ToLower(name), &loc)
 		}
 		for _, c := range country.Cities {
+			cityTrie.Insert(cleanString(c), &loc)
+		}
+		for _, c := range country.CityAbbreviations {
 			cityTrie.Insert(cleanString(c), &loc)
 		}
 	}
