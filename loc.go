@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	logger "log"
 	"math/rand"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"bitbucket.org/criticalmasser/goapis/results"
@@ -58,34 +60,46 @@ func randColor() string {
 }
 
 func loc(c *cli.Context) {
-	if len(c.Args()) != 1 {
-		log.Fatal("USAGE: ./main <dbname>")
+	users := make([]User, 0)
+	if c.String("file") != "" {
+		buf, err := ioutil.ReadFile(c.String("file"))
+		if err != nil {
+			log.Fatal("Failed to read input file: %s", err)
+		}
+		for _, line := range strings.Split(string(buf), "\n") {
+			if line != "" {
+				u := User{RawLocation: line}
+				users = append(users, u)
+			}
+		}
+	} else {
+		if len(c.Args()) != 1 {
+			log.Fatal("USAGE: ./main <dbname>")
+		}
+		log.Printf("Getting locations from server...")
+		dbname := c.Args()[0]
+		session, err := mgo.Dial("mongodb-server")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		col := session.DB(dbname).C("graph")
+		nodes := col.Find(nil).Iter()
+		var r results.Node
+		for nodes.Next(&r) {
+			loc, ok := r.Properties["location"].(string)
+			if !ok {
+				continue
+			}
+			u := User{
+				ID:          r.Start,
+				RawLocation: loc,
+			}
+			users = append(users, u)
+		}
 	}
 	log.Printf("Initializing database...")
 	initialize()
-
-	log.Printf("Getting locations from server...")
-	dbname := c.Args()[0]
-	session, err := mgo.Dial("mongodb-server")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	col := session.DB(dbname).C("graph")
-	nodes := col.Find(nil).Iter()
-	var r results.Node
-	users := make([]User, 0)
-	for nodes.Next(&r) {
-		loc, ok := r.Properties["location"].(string)
-		if !ok {
-			continue
-		}
-		u := User{
-			ID:          r.Start,
-			RawLocation: loc,
-		}
-		users = append(users, u)
-	}
 	log.Printf("users: %d\n", len(users))
 
 	var f = make(map[string]int)
@@ -96,15 +110,18 @@ func loc(c *cli.Context) {
 			continue
 		}
 		l := normalizeLocation(u.RawLocation)
+		//fmt.Printf("Raw: %q", u.RawLocation)
 		if l != nil {
 			//if l.Address != "" {
 			//    fmt.Printf("%s:%q:%v\n", u.ID, u.RawLocation, l)
 			//}
+			//fmt.Printf(" Loc: '%v'\n", l)
 			f[l.LongCountryCode]++
 			if l.ShortCountryCode == "MX" {
 				mx = append(mx, *u)
 			}
 		} else {
+			//fmt.Printf("---\n")
 			//fmt.Printf("&{%q, %q}\n", u.ID, u.RawLocation)
 		}
 	}
@@ -139,6 +156,12 @@ func main() {
 	app.Version = "0.1.0"
 	app.Usage = "Normalize user locations"
 	app.ArgsUsage = "<dbname>"
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "file",
+			Usage: "Analize file",
+		},
+	}
 	app.Action = loc
 	app.Run(os.Args)
 }

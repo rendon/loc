@@ -1,9 +1,10 @@
 package main
 
 import (
-	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	logger "log"
 	"os"
 	"regexp"
@@ -24,9 +25,17 @@ type Location struct {
 	Address          string
 }
 
+type Country struct {
+	Name      string   `json:"name"`
+	Names     []string `json:"names"`
+	Cities    []string `json:"cities"`
+	ShortCode string   `json:"short_code"`
+	LongCode  string   `json:"long_code"`
+}
+
 var (
 	splitRe   = regexp.MustCompile(`\s*[,|/-]\s*`)
-	punctRe   = regexp.MustCompile("[,.;:]")
+	punctRe   = regexp.MustCompile("[.;:]")
 	accentRe  = regexp.MustCompile("[áéíóú`]")
 	specialRe = regexp.MustCompile(`[♥✈️]'"`)
 
@@ -68,44 +77,31 @@ func parseCoordinate(c string) (*geo.Point, error) {
 }
 
 func initialize() {
-	// Read world cities
-	db, err := sql.Open("sqlite3", "data/ccc.db")
+	// Read cities
+	var countries []Country
+	buf, err := ioutil.ReadFile("data/countries.json")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to load cities: %s\n", err)
 	}
-	query := `
-SELECT  continents.name AS continent, countries.name AS country, 
-        countries.short_code AS short, countries.long_code AS long,
-        cities.name AS city
-FROM    continents, countries, cities
-WHERE   continents.id = countries.continent_id AND
-        cities.country_id = countries.id;
-	`
-	rows, err := db.Query(query)
-	if err != nil {
-		log.Fatal(err)
+	if err := json.Unmarshal(buf, &countries); err != nil {
+		log.Fatalf("Failed to unmarshal countries: %s\n", err)
 	}
 
-	for rows.Next() {
-		var l Location
-		err = rows.Scan(&l.Continent, &l.Country, &l.ShortCountryCode,
-			&l.LongCountryCode, &l.City)
-		if err != nil {
-			log.Println(err)
-			continue
+	for _, country := range countries {
+		loc := Location{
+			Country:          country.Name,
+			ShortCountryCode: country.ShortCode,
+			LongCountryCode:  country.LongCode,
 		}
-		l.Continent = strings.ToLower(l.Continent)
-		l.Country = strings.ToLower(l.Country)
-		l.City = strings.ToLower(l.City)
-
-		continentTrie.Insert(l.Continent, &l)
-		countryTrie.Insert(l.Country, &l)
-		cityTrie.Insert(l.City, &l)
-		countryCodes[l.ShortCountryCode] = &l
-		if l.ShortCountryCode == "MX" {
-			mexicanCities.Insert(l.City, &l)
+		countryTrie.Insert(country.Name, &loc)
+		for _, name := range country.Names {
+			countryTrie.Insert(strings.ToLower(name), &loc)
+		}
+		for _, c := range country.Cities {
+			cityTrie.Insert(cleanString(c), &loc)
 		}
 	}
+	fmt.Println()
 }
 
 func cleanString(str string) string {
@@ -154,24 +150,13 @@ func normalizeLocation(loc string) *Location {
 		tokens[i] = cleanString(tokens[i])
 	}
 
-	// Case 1: ciy, country OR country, city
+	// Case 1: city, country OR country, city
 	if len(tokens) == 2 {
 		if l, ok := countryTrie.Find(tokens[1]).(*Location); ok && l != nil {
 			return l
 		}
 		if l, ok := countryTrie.Find(tokens[0]).(*Location); ok && l != nil {
 			return l
-		}
-
-		// Very special case for México
-		if l, ok := mexicanCities.Find(loc).(*Location); ok && l != nil {
-			return l
-		}
-
-		for i := 0; i < len(tokens); i++ {
-			if l, ok := mexicanCities.Find(tokens[i]).(*Location); ok && l != nil {
-				return l
-			}
 		}
 
 		if l, ok := cityTrie.Find(tokens[0]).(*Location); ok && l != nil {
