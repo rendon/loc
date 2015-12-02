@@ -6,7 +6,7 @@ import (
 	logger "log"
 	"math/rand"
 	"os"
-	"sort"
+	//"sort"
 	"strings"
 	"time"
 
@@ -18,7 +18,7 @@ import (
 type User struct {
 	ID                 string
 	RawLocation        string
-	NormalizedLocation string
+	NormalizedLocation *Location
 }
 
 type FrequencyItem struct {
@@ -57,6 +57,33 @@ func randColor() string {
 	g := rand.Int() % 256
 	b := rand.Int() % 256
 	return fmt.Sprintf("#%02x%02x%02x", r, g, b)
+}
+
+func genDatamapsFile(users []User) {
+	/*
+		freq := Frequency{
+			Items: make([]FrequencyItem, 0),
+		}
+		for k, v := range f {
+			freq.Items = append(freq.Items, FrequencyItem{k, v})
+		}
+		sort.Sort(freq)
+		for _, item := range freq.Items {
+			fmt.Printf("%q: %q,\n", item.Code, randColor())
+		}
+		fmt.Println()
+		for _, item := range freq.Items {
+			fmt.Printf("%q: { fillKey: %q },\n", item.Code, item.Code)
+		}
+		fmt.Println()
+		for _, item := range freq.Items {
+			fmt.Printf("%q: %d,\n", item.Code, item.Quantity)
+		}
+
+		for i := 0; i < len(mx); i++ {
+			fmt.Printf("%s ", mx[i].ID)
+		}
+	*/
 }
 
 func loc(c *cli.Context) {
@@ -102,51 +129,22 @@ func loc(c *cli.Context) {
 	initialize()
 	log.Printf("users: %d\n", len(users))
 
-	var f = make(map[string]int)
-	mx := make([]User, 0)
 	for i := 0; i < len(users); i++ {
 		u := &users[i]
 		if u.RawLocation == "" {
 			continue
 		}
 		l := normalizeLocation(u.RawLocation)
-		//fmt.Printf("Raw: %q", u.RawLocation)
 		if l != nil {
-			//if l.Address != "" {
-			//    fmt.Printf("%s:%q:%v\n", u.ID, u.RawLocation, l)
-			//}
-			//fmt.Printf(" Loc: '%v'\n", l)
-			f[l.LongCountryCode]++
-			if l.ShortCountryCode == "MX" {
-				mx = append(mx, *u)
-			}
-		} else {
-			//fmt.Printf("---\n")
-			//fmt.Printf("&{%q, %q}\n", u.ID, u.RawLocation)
+			u.NormalizedLocation = l
 		}
 	}
 
-	freq := Frequency{
-		Items: make([]FrequencyItem, 0),
-	}
-	for k, v := range f {
-		freq.Items = append(freq.Items, FrequencyItem{k, v})
-	}
-	sort.Sort(freq)
-	for _, item := range freq.Items {
-		fmt.Printf("%q: %q,\n", item.Code, randColor())
-	}
-	fmt.Println()
-	for _, item := range freq.Items {
-		fmt.Printf("%q: { fillKey: %q },\n", item.Code, item.Code)
-	}
-	fmt.Println()
-	for _, item := range freq.Items {
-		fmt.Printf("%q: %d,\n", item.Code, item.Quantity)
-	}
-
-	for i := 0; i < len(mx); i++ {
-		fmt.Printf("%s ", mx[i].ID)
+	for _, u := range users {
+		if u.NormalizedLocation != nil {
+			country := u.NormalizedLocation.Country
+			fmt.Printf("%q,%q,%q\n", u.ID, u.RawLocation, country)
+		}
 	}
 }
 

@@ -40,17 +40,14 @@ var (
 	accentRe  = regexp.MustCompile("[áéíóú`]")
 	specialRe = regexp.MustCompile(`[♥✈️]'"`)
 
-	continentTrie = ds.NewTrie()
-	countryTrie   = ds.NewTrie()
-	cityTrie      = ds.NewTrie()
-	mexicanCities = ds.NewTrie()
+	countryTrie = ds.NewTrie()
+	cityTrie    = ds.NewTrie()
 
 	countryCodes = make(map[string]*Location)
 
 	// Simple floating point regex
-	r  = `[-+]?[0-9]+(\.[0-9]*)?`
-	re = regexp.MustCompile(fmt.Sprintf(`%s\s*,\s*%s`, r, r))
-
+	r        = `[-+]?[0-9]+(\.[0-9]*)?`
+	re       = regexp.MustCompile(fmt.Sprintf(`%s\s*,\s*%s`, r, r))
 	geocoder = geo.GoogleGeocoder{}
 )
 
@@ -121,31 +118,36 @@ func cleanString(str string) string {
 	return str
 }
 
+func findLocationByCoordinates(loc string) *Location {
+	p, err := parseCoordinate(loc)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+
+	addr, err := geocoder.ReverseGeocode(p)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+
+	tokens := strings.Split(addr, ",")
+	country := strings.ToLower(tokens[len(tokens)-1])
+	if l, ok := countryTrie.Find(country).(*Location); ok && l != nil {
+		l.Address = addr
+		return l
+	}
+
+	if l := countryCodes[country]; l != nil {
+		l.Address = addr
+		return l
+	}
+	return nil
+}
+
 func normalizeLocation(loc string) *Location {
 	if match := re.FindString(loc); match != "" {
-		p, err := parseCoordinate(match)
-		if err != nil {
-			log.Println(err)
-			return nil
-		}
-
-		addr, err := geocoder.ReverseGeocode(p)
-		if err != nil {
-			log.Println(err)
-			return nil
-		}
-
-		tokens := strings.Split(addr, ",")
-		country := strings.ToLower(tokens[len(tokens)-1])
-		if l, ok := countryTrie.Find(country).(*Location); ok && l != nil {
-			l.Address = addr
-			return l
-		}
-
-		if l := countryCodes[country]; l != nil {
-			l.Address = addr
-			return l
-		}
+		return findLocationByCoordinates(match)
 	}
 
 	loc = cleanString(loc)
@@ -190,7 +192,7 @@ func normalizeLocation(loc string) *Location {
 		}
 	}
 
-	// Case 4: Try all tokens by country, city and continent
+	// Case 4: Try all tokens by country and city
 	for _, t := range tokens {
 		if l, ok = countryTrie.Find(t).(*Location); ok && l != nil {
 			return l
@@ -201,9 +203,18 @@ func normalizeLocation(loc string) *Location {
 			return l
 		}
 	}
-	for _, t := range tokens {
-		if l, ok = continentTrie.Find(t).(*Location); ok && l != nil {
-			return l
+
+	// Case 5: Brute force...
+	size := len(loc)
+	for s := size; s >= 2; s-- {
+		for i := 0; i+s <= size; i++ {
+			ss := loc[i : i+s]
+			if l, ok := countryTrie.Find(ss).(*Location); ok && l != nil {
+				return l
+			}
+			if l, ok := cityTrie.Find(ss).(*Location); ok && l != nil {
+				return l
+			}
 		}
 	}
 	return nil
