@@ -30,6 +30,7 @@ type Country struct {
 	Names             []string `json:"names"`
 	Cities            []string `json:"cities"`
 	CityAbbreviations []string `json:"city_abbreviations"`
+	Guesses           []string `json:"guesses"`
 	ShortCode         string   `json:"short_code"`
 	LongCode          string   `json:"long_code"`
 }
@@ -42,6 +43,8 @@ var (
 
 	countryTrie = ds.NewTrie()
 	cityTrie    = ds.NewTrie()
+	abbrTrie    = ds.NewTrie()
+	guessTrie   = ds.NewTrie()
 
 	countryCodes = make(map[string]*Location)
 
@@ -99,7 +102,10 @@ func initialize() {
 			cityTrie.Insert(cleanString(c), &loc)
 		}
 		for _, c := range country.CityAbbreviations {
-			cityTrie.Insert(cleanString(c), &loc)
+			abbrTrie.Insert(cleanString(c), &loc)
+		}
+		for _, c := range country.Guesses {
+			guessTrie.Insert(cleanString(c), &loc)
 		}
 	}
 	fmt.Println()
@@ -192,27 +198,35 @@ func normalizeLocation(loc string) *Location {
 		}
 	}
 
-	// Case 4: Try all tokens by country and city
-	for _, t := range tokens {
-		if l, ok = countryTrie.Find(t).(*Location); ok && l != nil {
-			return l
-		}
-	}
-	for _, t := range tokens {
-		if l, ok = cityTrie.Find(t).(*Location); ok && l != nil {
-			return l
-		}
-	}
-
 	// Case 5: Brute force...
 	size := len(loc)
 	for s := size; s >= 2; s-- {
+		// Trie all possible substrings, `loc` is expected to be a short string
+		// By country
 		for i := 0; i+s <= size; i++ {
 			ss := loc[i : i+s]
 			if l, ok := countryTrie.Find(ss).(*Location); ok && l != nil {
 				return l
 			}
+		}
+		// By city
+		for i := 0; i+s <= size; i++ {
+			ss := loc[i : i+s]
 			if l, ok := cityTrie.Find(ss).(*Location); ok && l != nil {
+				return l
+			}
+		}
+		// By abbreviation
+		for i := 0; i+s <= size; i++ {
+			ss := loc[i : i+s]
+			if l, ok := abbrTrie.Find(ss).(*Location); ok && l != nil {
+				return l
+			}
+		}
+		// And finally... some guessing
+		for i := 0; i+s <= size; i++ {
+			ss := loc[i : i+s]
+			if l, ok := guessTrie.Find(ss).(*Location); ok && l != nil {
 				return l
 			}
 		}

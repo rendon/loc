@@ -135,7 +135,11 @@
     },
     {
         "cities": [
-            "Buenos Aires"
+            "Buenos Aires",
+            "Rosario",
+            "Mar de plata",
+            "Caba",
+            "Olavarria"
         ],
         "long_code": "ARG",
         "name": "Argentina",
@@ -266,7 +270,12 @@
     },
     {
         "cities": [
-            "Sydney"
+            "Sydney",
+            "Melbourne",
+            "Canberra"
+        ],
+        "city_abbreviations": [
+            "sidney"
         ],
         "long_code": "AUS",
         "name": "Australia",
@@ -396,6 +405,12 @@
         "short_code": "BI"
     },
     {
+        "cities": [
+            "brussels"
+        ],
+        "city_abbreviations": [
+            "bruxelles"
+        ],
         "long_code": "BEL",
         "name": "Belgium",
         "names": [
@@ -724,6 +739,9 @@
             "Rio de Janeiro",
             "Belo Horizonte"
         ],
+        "city_abbreviations": [
+            "janeiro"
+        ],
         "long_code": "BRA",
         "name": "Brazil",
         "names": [
@@ -885,7 +903,14 @@
     },
     {
         "cities": [
-            "Toronto"
+            "Toronto",
+            "Canada",
+            "Vancouver",
+            "British columbia",
+            "Quebec",
+            "Montreal",
+            "Ottawa",
+            "Calgary"
         ],
         "long_code": "CAN",
         "name": "Canada",
@@ -952,7 +977,11 @@
     },
     {
         "cities": [
-            "Santiago"
+            "Santiago",
+            "Temuco",
+            "Valparaiso",
+            "Vina del mar",
+            "Barrio yungay"
         ],
         "long_code": "CHL",
         "name": "Chile",
@@ -1010,6 +1039,9 @@
             "Xiamen",
             "Dalian",
             "Fuzhou"
+        ],
+        "city_abbreviations": [
+            "hk"
         ],
         "long_code": "CHN",
         "name": "China",
@@ -1178,7 +1210,9 @@
     },
     {
         "cities": [
-            "Bogota"
+            "Bogota",
+            "Medellin",
+            "Barranquilla"
         ],
         "long_code": "COL",
         "name": "Colombia",
@@ -1244,6 +1278,9 @@
         "short_code": "CR"
     },
     {
+        "cities": [
+            "Habana"
+        ],
         "long_code": "CUB",
         "name": "Cuba",
         "names": [
@@ -1375,7 +1412,19 @@
         "cities": [
             "Essen",
             "Dusseldorf",
-            "Berlin"
+            "Berlin",
+            "Germany",
+            "Alemania",
+            "Deutschland",
+            "Frankfurt",
+            "Munich",
+            "Munchen",
+            "Muenchen",
+            "Freiburg",
+            "Marburg",
+            "Karlsruhe",
+            "Wolfsburgo",
+            "Sajonia"
         ],
         "long_code": "DEU",
         "name": "Germany",
@@ -1473,6 +1522,9 @@
         "short_code": "DK"
     },
     {
+        "cities": [
+            "Santo domingo"
+        ],
         "long_code": "DOM",
         "name": "Dominican Republic",
         "names": [
@@ -1537,6 +1589,10 @@
         "short_code": "DZ"
     },
     {
+        "cities": [
+            "Quito",
+            "Guayaquil"
+        ],
         "long_code": "ECU",
         "name": "Ecuador",
         "names": [
@@ -1639,7 +1695,43 @@
     {
         "cities": [
             "Madrid",
-            "Barcelona"
+            "Barcelona",
+            "Espa\u00f1a",
+            "Espana",
+            "Espanya",
+            "Espania",
+            "Sevilla",
+            "Alicante",
+            "Galicia",
+            "Toledo",
+            "Valladolid",
+            "Zaragoza",
+            "Malaga",
+            "Murcia",
+            "Cordoba",
+            "Valencia",
+            "Bilbao",
+            "Vigo",
+            "Andalucia",
+            "Granada",
+            "Mendoza",
+            "Coruna",
+            "Ibiza",
+            "Pamplona",
+            "Macondo",
+            "Asturias",
+            "Canarias",
+            "Almeria",
+            "Camp nou",
+            "Donostia",
+            "Spain",
+            "Canaria",
+            "Vitoria-gasteiz",
+            "Castellon de la plana",
+            "Lleida",
+            "Galiza",
+            "Euskadi",
+            "Euskal"
         ],
         "long_code": "ESP",
         "name": "Spain",
@@ -1737,6 +1829,9 @@
         "short_code": "ET"
     },
     {
+        "cities": [
+            "Helsinki"
+        ],
         "long_code": "FIN",
         "name": "Finland",
         "names": [
@@ -1834,7 +1929,11 @@
     },
     {
         "cities": [
-            "Paris"
+            "Paris",
+            "Lyon",
+            "Bordeaux",
+            "Tours",
+            "Oise"
         ],
         "long_code": "FRA",
         "name": "France",
@@ -1933,7 +2032,14 @@
     },
     {
         "cities": [
-            "London"
+            "London",
+            "Hertford",
+            "England",
+            "United kingdom",
+            "London",
+            "Uk",
+            "Glasgow",
+            "Liverpool"
         ],
         "long_code": "GBR",
         "name": "United Kingdom",
@@ -2290,6 +2396,9 @@
         "short_code": "GY"
     },
     {
+        "cities": [
+            "tegucigalpa"
+        ],
         "long_code": "HND",
         "name": "Honduras",
         "names": [
@@ -2464,7 +2573,10 @@
             "Hyderabad",
             "Ahmadabad",
             "Pune",
-            "Surat"
+            "Surat",
+            "Calcuta",
+            "Haryana",
+            "Gurgaon"
         ],
         "long_code": "IND",
         "name": "India",
@@ -2498,6 +2610,9 @@
         "short_code": "IN"
     },
     {
+        "cities": [
+            "Dublin"
+        ],
         "long_code": "IRL",
         "name": "Ireland",
         "names": [
@@ -2663,7 +2778,14 @@
     },
     {
         "cities": [
-            "Milan"
+            "Milan",
+            "Milano",
+            "Florencia",
+            "Rome",
+            "Venecia"
+        ],
+        "guesses": [
+            "Roma"
         ],
         "long_code": "ITA",
         "name": "Italy",
@@ -3693,6 +3815,60 @@
             ", zac",
             ", ver"
         ],
+        "guesses": [
+            "sonadora",
+            "inagotable",
+            "ciudad de las bestias",
+            "todas partes",
+            "feliz",
+            "todos lados",
+            "aqui",
+            "ciudadano",
+            "omnipresente",
+            "mundo",
+            "ombligo",
+            "luna",
+            "aqui",
+            "alla",
+            "asteroide",
+            "via",
+            "lactea",
+            "ciudad",
+            "ahi",
+            "lugar",
+            "pais",
+            "nunca",
+            "jamas",
+            "mercurio",
+            "venus",
+            "tierra",
+            "marte",
+            "jupiter",
+            "saturno",
+            "urano",
+            "neptuno",
+            "pluton",
+            "corazon",
+            "aguilas",
+            "fondo",
+            "derecha",
+            "izquierda",
+            "utopia",
+            "oz",
+            "abajo",
+            "ching",
+            "aca",
+            "federal",
+            "anahuac",
+            "universo",
+            "desconocida",
+            "imaginacion",
+            "piernas",
+            "entre",
+            "universo",
+            "desconocida",
+            "mundial"
+        ],
         "long_code": "MEX",
         "name": "Mexico",
         "names": [
@@ -4150,6 +4326,10 @@
         "short_code": "NG"
     },
     {
+        "cities": [
+            "Madriz",
+            "Managua"
+        ],
         "long_code": "NIC",
         "name": "Nicaragua",
         "names": [
@@ -4640,6 +4820,9 @@
         "short_code": "PT"
     },
     {
+        "cities": [
+            "Asuncion"
+        ],
         "long_code": "PRY",
         "name": "Paraguay",
         "names": [
@@ -5269,6 +5452,9 @@
         "short_code": "SI"
     },
     {
+        "cities": [
+            "Stockholm"
+        ],
         "long_code": "SWE",
         "name": "Sweden",
         "names": [
@@ -5794,6 +5980,9 @@
         "short_code": "UA"
     },
     {
+        "cities": [
+            "Montevideo"
+        ],
         "long_code": "URY",
         "name": "Uruguay",
         "names": [
@@ -5839,7 +6028,206 @@
             "Atlanta",
             "Washington",
             "Boston",
-            "Phoenix"
+            "Phoenix",
+            "Alabama",
+            "Alaska",
+            "Arizona",
+            "Arkansas",
+            "California",
+            "Colorado",
+            "Connecticut",
+            "Delaware",
+            "Florida",
+            "Georgia",
+            "Hawaii",
+            "Idaho",
+            "Illinois",
+            "Indiana",
+            "Iowa",
+            "Kansas",
+            "Kentucky",
+            "Louisiana",
+            "Maine",
+            "Maryland",
+            "Massachusetts",
+            "Michigan",
+            "Minnesota",
+            "Mississippi",
+            "Missouri",
+            "Montana",
+            "Nebraska",
+            "Nevada",
+            "New hampshire",
+            "New jersey",
+            "New mexico",
+            "North carolina",
+            "North dakota",
+            "Ohio",
+            "Oklahoma",
+            "Oregon",
+            "Pennsylvania",
+            "Rhode island",
+            "South carolina",
+            "South dakota",
+            "Tennessee",
+            "Texas",
+            "Utah",
+            "Vermont",
+            "Virginia",
+            "West virginia",
+            "Wisconsin",
+            "Wyoming",
+            "Angeles",
+            "San antonio",
+            "San diego",
+            "Austin",
+            "Jacksonville",
+            "Indianapolis",
+            "Columbus",
+            "Fort worth",
+            "Charlotte",
+            "Detroit",
+            "El paso",
+            "Memphis",
+            "Seattle",
+            "Denver",
+            "Washington",
+            "Nashville-davidson",
+            "Baltimore",
+            "Louisville",
+            "Portland",
+            "Oklahoma ",
+            "Milwaukee",
+            "Las vegas",
+            "Albuquerque",
+            "Tucson",
+            "Fresno",
+            "Sacramento",
+            "Long beach",
+            "Kansas ",
+            "Mesa",
+            "Virginia beach",
+            "Colorado springs",
+            "Raleigh",
+            "Omaha",
+            "Oakland",
+            "Tulsa",
+            "Minneapolis",
+            "Cleveland",
+            "Wichita",
+            "Arlington",
+            "New orleans",
+            "Bakersfield",
+            "Tampa",
+            "Honolulu",
+            "Anaheim",
+            "Aurora",
+            "Santa ana",
+            "St. louis",
+            "Riverside",
+            "Corpus christi",
+            "Pittsburgh",
+            "Lexington",
+            "Anchorage municipality",
+            "Stockton",
+            "Cincinnati",
+            "St. paul",
+            "Toledo",
+            "Newark",
+            "Greensboro",
+            "Plano",
+            "Henderson",
+            "Lincoln",
+            "Buffalo",
+            "Fort wayne",
+            "Jersey ",
+            "Chula vista",
+            "Orlando",
+            "St. petersburg",
+            "Norfolk",
+            "Chandler",
+            "Laredo",
+            "Madison",
+            "Durham",
+            "Lubbock",
+            "Winston",
+            "Garland",
+            "Glendale",
+            "Hialeah",
+            "Reno",
+            "Baton rouge",
+            "Irvine",
+            "Chesapeake",
+            "Irving",
+            "Scottsdale",
+            "North las vegas",
+            "Fremont",
+            "Gilbert town",
+            "San bernardino",
+            "Boise",
+            "Birmingham",
+            "Jefferson",
+            "Colorado",
+            "Saint louis",
+            "Fayette",
+            "Anchorage",
+            "Saint paul",
+            "Salem",
+            "Brooklyn",
+            "Silicon valley"
+        ],
+        "city_abbreviations": [
+            "al",
+            "ak",
+            "az",
+            "ar",
+            "ca",
+            "co",
+            "ct",
+            "de",
+            "fl",
+            "ga",
+            "hi",
+            "id",
+            "il",
+            "in",
+            "in",
+            "ia",
+            "ks",
+            "ky",
+            "la",
+            "me",
+            "md",
+            "ma",
+            "mi",
+            "mn",
+            "ms",
+            "mo",
+            "mt",
+            "ne",
+            "nv",
+            "nh",
+            "nj",
+            "nm",
+            "ny",
+            "nc",
+            "nd",
+            "oh",
+            "ok",
+            "or",
+            "pa",
+            "ri",
+            "sc",
+            "sd",
+            "tn",
+            "tx",
+            "ut",
+            "vt",
+            "va",
+            "wa",
+            "wv",
+            "wi",
+            "wy"
         ],
         "long_code": "USA",
         "name": "United States of America",
@@ -5906,6 +6294,12 @@
         "short_code": "UZ"
     },
     {
+        "cities": [
+            "Caracas",
+            "Barquisimeto",
+            "Zulia",
+            "Maracaibo"
+        ],
         "long_code": "VEN",
         "name": "Venezuela",
         "names": [
@@ -6071,7 +6465,8 @@
     {
         "cities": [
             "Johannesburg",
-            "East Rand"
+            "East Rand",
+            "Cape town"
         ],
         "long_code": "ZAF",
         "name": "South Africa",
