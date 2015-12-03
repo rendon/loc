@@ -77,7 +77,6 @@ func parseCoordinate(c string) (*geo.Point, error) {
 }
 
 func initialize() {
-	// Read cities
 	var countries []Country
 	buf, err := ioutil.ReadFile("data/countries.json")
 	if err != nil {
@@ -224,12 +223,9 @@ func normalizeLocation(loc string) *Location {
 		}
 	}
 	// By abbreviation
-	for s := size; s >= 2; s-- {
-		for i := 0; i+s <= size; i++ {
-			ss := loc[i : i+s]
-			if l, ok := abbrTrie.Find(ss).(*Location); ok && l != nil {
-				return l
-			}
+	for i := 0; i < len(tokens); i++ {
+		if l, ok := abbrTrie.Find(tokens[i]).(*Location); ok && l != nil {
+			return l
 		}
 	}
 
