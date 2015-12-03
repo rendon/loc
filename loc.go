@@ -2,11 +2,10 @@ package main
 
 import (
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
-	logger "log"
 	"math/rand"
 	"os"
-	//"sort"
 	"strings"
 	"time"
 
@@ -32,6 +31,8 @@ type Frequency struct {
 
 func init() {
 	rand.Seed(time.Now().Unix())
+	log.SetLevel(log.InfoLevel)
+	log.SetOutput(os.Stderr)
 }
 
 func (f Frequency) Len() int {
@@ -47,10 +48,6 @@ func (f Frequency) Swap(i, j int) {
 	f.Items[i] = f.Items[j]
 	f.Items[j] = t
 }
-
-var (
-	log *logger.Logger
-)
 
 func randColor() string {
 	r := rand.Int() % 256

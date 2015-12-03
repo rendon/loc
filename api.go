@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
-	logger "log"
 	"os"
 	"regexp"
 	"strconv"
@@ -55,7 +55,6 @@ var (
 )
 
 func init() {
-	log = logger.New(os.Stderr, "", 0)
 	// You'll need a Google API key.
 	geo.SetGoogleAPIKey(os.Getenv("GOOGLE_GEO_API_KEY"))
 }
@@ -113,7 +112,6 @@ func initialize() {
 			guessTrie.Insert(cleanString(c), &loc)
 		}
 	}
-	fmt.Println()
 }
 
 func cleanString(str string) string {
