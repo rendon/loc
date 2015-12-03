@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -56,31 +57,23 @@ func randColor() string {
 	return fmt.Sprintf("#%02x%02x%02x", r, g, b)
 }
 
-func genDatamapsFile(users []User) {
-	/*
-		freq := Frequency{
-			Items: make([]FrequencyItem, 0),
+func computeFrequencies(users []User) {
+	f := make(map[string]int)
+	for i := 0; i < len(users); i++ {
+		if users[i].NormalizedLocation == nil {
+			continue
 		}
-		for k, v := range f {
-			freq.Items = append(freq.Items, FrequencyItem{k, v})
-		}
-		sort.Sort(freq)
-		for _, item := range freq.Items {
-			fmt.Printf("%q: %q,\n", item.Code, randColor())
-		}
-		fmt.Println()
-		for _, item := range freq.Items {
-			fmt.Printf("%q: { fillKey: %q },\n", item.Code, item.Code)
-		}
-		fmt.Println()
-		for _, item := range freq.Items {
-			fmt.Printf("%q: %d,\n", item.Code, item.Quantity)
-		}
-
-		for i := 0; i < len(mx); i++ {
-			fmt.Printf("%s ", mx[i].ID)
-		}
-	*/
+		f[users[i].NormalizedLocation.LongCountryCode]++
+	}
+	freqs := Frequency{Items: make([]FrequencyItem, 0)}
+	for k, v := range f {
+		freqs.Items = append(freqs.Items, FrequencyItem{k, v})
+	}
+	sort.Sort(freqs)
+	fmt.Printf("Frequencies:\n")
+	for i := len(freqs.Items) - 1; i >= 0; i-- {
+		fmt.Printf("%v: %d\n", freqs.Items[i].Code, freqs.Items[i].Quantity)
+	}
 }
 
 func loc(c *cli.Context) {
@@ -143,6 +136,10 @@ func loc(c *cli.Context) {
 			fmt.Printf("%q,%q,%q\n", u.ID, u.RawLocation, country)
 		}
 	}
+
+	if c.Bool("frequencies") {
+		computeFrequencies(users)
+	}
 }
 
 func main() {
@@ -155,6 +152,10 @@ func main() {
 		cli.StringFlag{
 			Name:  "file",
 			Usage: "Analize file",
+		},
+		cli.BoolFlag{
+			Name:  "frequencies",
+			Usage: "Compute frequencies",
 		},
 	}
 	app.Action = loc
