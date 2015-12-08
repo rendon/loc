@@ -1,4 +1,4 @@
-*.swp
+*.sw[op]
 GeoLite2Cities/
 _vendor/
 bin/loc
