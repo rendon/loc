@@ -1,12 +1,12 @@
 package loc
 
 type Location struct {
-	Continent        string
-	Country          string
-	ShortCountryCode string
-	LongCountryCode  string
-	City             string
-	Address          string
+	Continent        string `json:"continent"`
+	Country          string `json:"country"`
+	ShortCountryCode string `json:"short_country_code"`
+	LongCountryCode  string `json:"long_country_code"`
+	City             string `json:"city"`
+	Address          string `json:"address"`
 }
 
 type Country struct {
