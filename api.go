@@ -1,4 +1,4 @@
-package main
+package loc
 
 import (
 	"encoding/json"
@@ -15,25 +15,6 @@ import (
 	"github.com/kellydunn/golang-geo"
 	_ "github.com/mattn/go-sqlite3"
 )
-
-type Location struct {
-	Continent        string
-	Country          string
-	ShortCountryCode string
-	LongCountryCode  string
-	City             string
-	Address          string
-}
-
-type Country struct {
-	Name              string   `json:"name"`
-	Names             []string `json:"names"`
-	Cities            []string `json:"cities"`
-	CityAbbreviations []string `json:"city_abbreviations"`
-	Guesses           []string `json:"guesses"`
-	ShortCode         string   `json:"short_code"`
-	LongCode          string   `json:"long_code"`
-}
 
 var (
 	splitRe   = regexp.MustCompile(`\s*[,|/-]\s*`)
@@ -57,6 +38,7 @@ var (
 func init() {
 	// You'll need a Google API key.
 	geo.SetGoogleAPIKey(os.Getenv("GOOGLE_GEO_API_KEY"))
+	initialize()
 }
 
 func parseCoordinate(c string) (*geo.Point, error) {
@@ -77,11 +59,13 @@ func parseCoordinate(c string) (*geo.Point, error) {
 }
 
 func initialize() {
-	var countries []Country
-	buf, err := ioutil.ReadFile("data/countries.json")
+	locDB := os.Getenv("LOC_DB")
+	buf, err := ioutil.ReadFile(locDB)
 	if err != nil {
-		log.Fatalf("Failed to load cities: %s\n", err)
+		log.Fatalf("Failed to load location database: %s", err)
 	}
+
+	var countries []Country
 	if err := json.Unmarshal(buf, &countries); err != nil {
 		log.Fatalf("Failed to unmarshal countries: %s\n", err)
 	}
@@ -153,7 +137,7 @@ func findLocationByCoordinates(loc string) *Location {
 	return nil
 }
 
-func normalizeLocation(loc string) *Location {
+func Locate(loc string) *Location {
 	if match := re.FindString(loc); match != "" {
 		return findLocationByCoordinates(match)
 	}
