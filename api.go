@@ -33,13 +33,9 @@ var (
 	r        = `[-+]?[0-9]+(\.[0-9]*)?`
 	re       = regexp.MustCompile(fmt.Sprintf(`%s\s*,\s*%s`, r, r))
 	geocoder = geo.GoogleGeocoder{}
-)
 
-func init() {
-	// You'll need a Google API key.
-	geo.SetGoogleAPIKey(os.Getenv("GOOGLE_GEO_API_KEY"))
-	initialize()
-}
+	initialized = false
+)
 
 func parseCoordinate(c string) (*geo.Point, error) {
 	c = strings.Replace(c, " ", "", -1)
@@ -58,7 +54,9 @@ func parseCoordinate(c string) (*geo.Point, error) {
 	return geo.NewPoint(lat, long), nil
 }
 
-func initialize() {
+func Initialize() {
+	// You'll need a Google API key.
+	geo.SetGoogleAPIKey(os.Getenv("GOOGLE_GEO_API_KEY"))
 	locDB := os.Getenv("LOC_DB")
 	buf, err := ioutil.ReadFile(locDB)
 	if err != nil {
@@ -138,6 +136,10 @@ func findLocationByCoordinates(loc string) *Location {
 }
 
 func Locate(loc string) *Location {
+	if !initialized {
+		Initialize()
+		initialized = true
+	}
 	if match := re.FindString(loc); match != "" {
 		return findLocationByCoordinates(match)
 	}
